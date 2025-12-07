@@ -1,37 +1,92 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# InternLink
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+InternLink est une plateforme de gestion de stages et d'offres d'emploi développée avec Laravel.
 
-## About Laravel
+## Installation
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### Prérequis
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- PHP 8.1 ou supérieur
+- Composer
+- Node.js et npm
+- MySQL ou autre base de données compatible
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Installation
 
-## Learning Laravel
+1. Clonez le repository :
+```bash
+git clone https://github.com/Lbourdi/InternLink.git
+cd InternLink
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+2. Installez les dépendances PHP :
+```bash
+composer install
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+3. Installez les dépendances JavaScript :
+```bash
+npm install
+```
 
-## Laravel Sponsors
+4. Copiez le fichier d'environnement :
+```bash
+cp .env.example .env
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+5. Générez la clé d'application :
+```bash
+php artisan key:generate
+```
 
-### Premium Partners
+6. Configurez votre base de données dans le fichier `.env`
+
+7. Exécutez les migrations :
+```bash
+php artisan migrate
+```
+
+## Lancer l'application
+
+### Serveur de développement
+
+1. Démarrez le serveur Laravel :
+```bash
+php artisan serve
+```
+
+2. Dans un autre terminal, démarrez Vite pour le développement frontend :
+```bash
+npm run dev
+```
+
+3. Accédez à l'application sur [http://localhost:8000](http://localhost:8000)
+
+## À propos de Laravel
+
+Laravel est un framework d'application web avec une syntaxe expressive et élégante. Nous pensons que le développement doit être une expérience agréable et créative pour être vraiment épanouissante. Laravel simplifie le développement en facilitant les tâches courantes utilisées dans de nombreux projets web, telles que :
+
+- [Moteur de routage simple et rapide](https://laravel.com/docs/routing).
+- [Conteneur d'injection de dépendances puissant](https://laravel.com/docs/container).
+- Plusieurs backends pour le stockage de [session](https://laravel.com/docs/session) et de [cache](https://laravel.com/docs/cache).
+- [ORM de base de données](https://laravel.com/docs/eloquent) expressif et intuitif.
+- [Migrations de schéma](https://laravel.com/docs/migrations) agnostiques de la base de données.
+- [Traitement robuste des tâches en arrière-plan](https://laravel.com/docs/queues).
+- [Diffusion d'événements en temps réel](https://laravel.com/docs/broadcasting).
+
+Laravel est accessible, puissant et fournit les outils nécessaires pour de grandes applications robustes.ons robustes.
+
+## Apprendre Laravel
+
+Laravel possède la [documentation](https://laravel.com/docs) et la bibliothèque de tutoriels vidéo les plus complètes de tous les frameworks d'applications web modernes, ce qui facilite la prise en main du framework. Vous pouvez également consulter [Laravel Learn](https://laravel.com/learn), où vous serez guidé dans la création d'une application Laravel moderne.
+
+Si vous n'avez pas envie de lire, [Laracasts](https://laracasts.com) peut vous aider. Laracasts contient des milliers de tutoriels vidéo sur une variété de sujets incluant Laravel, PHP moderne, les tests unitaires et JavaScript. Améliorez vos compétences en explorant notre bibliothèque vidéo complète.mplète.
+
+## Sponsors Laravel
+
+Nous tenons à remercier les sponsors suivants pour le financement du développement de Laravel. Si vous souhaitez devenir sponsor, veuillez visiter le [programme Laravel Partners](https://partners.laravel.com).
+
+### Partenaires Premium
 
 - **[Vehikl](https://vehikl.com)**
 - **[Tighten Co.](https://tighten.co)**
@@ -42,18 +97,18 @@ We would like to extend our thanks to the following sponsors for funding Laravel
 - **[Redberry](https://redberry.international/laravel-development)**
 - **[Active Logic](https://activelogic.com)**
 
-## Contributing
+## Contribuer
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Merci d'envisager de contribuer au framework Laravel ! Le guide de contribution se trouve dans la [documentation Laravel](https://laravel.com/docs/contributions).
 
-## Code of Conduct
+## Code de conduite
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Afin de garantir que la communauté Laravel soit accueillante pour tous, veuillez consulter et respecter le [Code de conduite](https://laravel.com/docs/contributions#code-of-conduct).
 
-## Security Vulnerabilities
+## Vulnérabilités de sécurité
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Si vous découvrez une vulnérabilité de sécurité dans Laravel, veuillez envoyer un e-mail à Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). Toutes les vulnérabilités de sécurité seront traitées rapidement.
 
-## License
+## Licence
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Le framework Laravel est un logiciel open source sous licence [MIT](https://opensource.org/licenses/MIT).
