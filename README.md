@@ -1,114 +1,102 @@
 # InternLink
 
-InternLink est une plateforme de gestion de stages et d'offres d'emploi développée avec Laravel.
+Guide rapide pour mettre en place le projet Laravel, préparer la base de données, insérer les données par défaut, compiler et lancer l'application.
 
-## Installation
-
-### Prérequis
-
-- PHP 8.1 ou supérieur
+## 1. Prérequis
+- PHP 8.4+
 - Composer
-- Node.js et npm
-- MySQL ou autre base de données compatible
+- Node.js & npm (ou yarn)
+- MySQL (ou autre SGBD supporté)
+- Git
 
-### Installation
-
-1. Clonez le repository :
+## 2. Cloner le projet
 ```bash
 git clone https://github.com/Lbourdi/InternLink.git
 cd InternLink
 ```
 
-2. Installez les dépendances PHP :
+## 3. Installer les dépendances
 ```bash
 composer install
-```
-
-3. Installez les dépendances JavaScript :
-```bash
 npm install
 ```
 
-4. Copiez le fichier d'environnement :
+## 4. Configuration de l'environnement
+1. Copier le fichier d'exemple :
 ```bash
 cp .env.example .env
 ```
-
-5. Générez la clé d'application :
+2. Générer la clé d'application :
 ```bash
 php artisan key:generate
 ```
+3. Modifier `.env` pour configurer la base de données :
+- DB_CONNECTION=mysql
+- DB_HOST=127.0.0.1
+- DB_PORT=3306
+- DB_DATABASE=internlink
+- DB_USERNAME=your_user
+- DB_PASSWORD=your_password
 
-6. Configurez votre base de données dans le fichier `.env`
-
-7. Exécutez les migrations :
+Si vous devez créer la base MySQL manuellement :
 ```bash
-php artisan migrate
+# adapte user et password selon ton système
+mysql -u root -p -e "CREATE DATABASE internlink;"
 ```
 
-## Lancer l'application
-
-### Serveur de développement
-
-1. Démarrez le serveur Laravel :
+## 5. Migrations et données par défaut (seed)
+Exécuter les migrations puis insérer les données par défaut :
 ```bash
-php artisan serve
+php artisan migrate --seed
 ```
+Repartir d'une base de données vide :
+```bash
+php artisan migrate:fresh --seed
+```
+- Vérifie `database/seeders/DatabaseSeeder.php` pour connaître les enregistrements insérés par défaut (comptes, rôles, exemples).
 
-2. Dans un autre terminal, démarrez Vite pour le développement frontend :
+## 6. Compiler les assets (frontend)
+Développement (watch) :
 ```bash
 npm run dev
 ```
+Production (build optimisé) :
+```bash
+npm run build
+```
+Lance `npm run dev` dans un terminal pendant que tu développes.
 
-3. Accédez à l'application sur [http://localhost:8000](http://localhost:8000)
+## 7. Lancer l'application
+Serveur Laravel (développement) :
+```bash
+php artisan serve
+```
+Accéder à : http://127.0.0.1:8000
 
-## À propos de Laravel
+Si tu utilises Valet / Docker / un serveur web, configure le virtual host en conséquence.
 
-Laravel est un framework d'application web avec une syntaxe expressive et élégante. Nous pensons que le développement doit être une expérience agréable et créative pour être vraiment épanouissante. Laravel simplifie le développement en facilitant les tâches courantes utilisées dans de nombreux projets web, telles que :
+## 8. Commandes utiles en cas de problème
+- Vider le cache de configuration :
+```bash
+php artisan config:clear
+php artisan cache:clear
+php artisan route:clear
+php artisan view:clear
+```
+- Recréer la BDD et reseeder :
+```bash
+php artisan migrate:fresh --seed
+```
 
-- [Moteur de routage simple et rapide](https://laravel.com/docs/routing).
-- [Conteneur d'injection de dépendances puissant](https://laravel.com/docs/container).
-- Plusieurs backends pour le stockage de [session](https://laravel.com/docs/session) et de [cache](https://laravel.com/docs/cache).
-- [ORM de base de données](https://laravel.com/docs/eloquent) expressif et intuitif.
-- [Migrations de schéma](https://laravel.com/docs/migrations) agnostiques de la base de données.
-- [Traitement robuste des tâches en arrière-plan](https://laravel.com/docs/queues).
-- [Diffusion d'événements en temps réel](https://laravel.com/docs/broadcasting).
+## 9. Où regarder pour les données par défaut
+- `database/seeders/DatabaseSeeder.php`
+- les seeders individuels dans `database/seeders/` pour connaître les comptes (admin/utilisateur) créés et mots de passe par défaut éventuels.
 
-Laravel est accessible, puissant et fournit les outils nécessaires pour de grandes applications robustes.ons robustes.
+## 10. Notes rapides
+- Si tu vois des erreurs liées aux packages : exécute `composer update` puis retente.
+- Pour les fichiers uploadés : vérifie `storage/app/public` et le lien symbolique `public/storage`.
+- Pour changer le port du serveur artisan : `php artisan serve --port=8080`
 
-## Apprendre Laravel
+---
 
-Laravel possède la [documentation](https://laravel.com/docs) et la bibliothèque de tutoriels vidéo les plus complètes de tous les frameworks d'applications web modernes, ce qui facilite la prise en main du framework. Vous pouvez également consulter [Laravel Learn](https://laravel.com/learn), où vous serez guidé dans la création d'une application Laravel moderne.
-
-Si vous n'avez pas envie de lire, [Laracasts](https://laracasts.com) peut vous aider. Laracasts contient des milliers de tutoriels vidéo sur une variété de sujets incluant Laravel, PHP moderne, les tests unitaires et JavaScript. Améliorez vos compétences en explorant notre bibliothèque vidéo complète.mplète.
-
-## Sponsors Laravel
-
-Nous tenons à remercier les sponsors suivants pour le financement du développement de Laravel. Si vous souhaitez devenir sponsor, veuillez visiter le [programme Laravel Partners](https://partners.laravel.com).
-
-### Partenaires Premium
-
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
-
-## Contribuer
-
-Merci d'envisager de contribuer au framework Laravel ! Le guide de contribution se trouve dans la [documentation Laravel](https://laravel.com/docs/contributions).
-
-## Code de conduite
-
-Afin de garantir que la communauté Laravel soit accueillante pour tous, veuillez consulter et respecter le [Code de conduite](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Vulnérabilités de sécurité
-
-Si vous découvrez une vulnérabilité de sécurité dans Laravel, veuillez envoyer un e-mail à Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). Toutes les vulnérabilités de sécurité seront traitées rapidement.
-
-## Licence
-
-Le framework Laravel est un logiciel open source sous licence [MIT](https://opensource.org/licenses/MIT).
+Pour toute adaptation particulière (Docker, configuration CI, credentials par défaut), indique la configuration souhaitée et je fournis les commandes spécifiques.
