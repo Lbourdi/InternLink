@@ -27,4 +27,9 @@ class Offer extends Model
     public function applications() {
         return $this->hasMany(Application::class);
     }
+
+    public function skills()
+    {
+        return $this->belongsToMany(Skill::class);
+    }
 }

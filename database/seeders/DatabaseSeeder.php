@@ -3,36 +3,44 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Offer;
+use App\Models\Skill;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // 1. Créer un compte de test pour TOI (pour te connecter facilement)
-        User::factory()->create([
-            'name'     => 'Recruteur Test',
-            'email'    => 'recruteur@example.com',
-            'password' => 'password',
-            'role'     => 'company', // <--- On lui donne le rôle entreprise
+        // Skills
+        $this->call(SkillSeeder::class);
+        $skills = Skill::all();
+
+        // Comptes de test
+        $recruiter = User::factory()->create([
+            'name' => 'Recruteur Test',
+            'email' => 'recruteur@example.com',
+            'role' => 'company',
         ]);
 
-        User::factory()->create([
-            'name'     => 'Etudiant Test',
-            'email'    => 'etudiant@example.com',
-            'password' => 'password',
-            'role'     => 'student', // <--- On lui donne le rôle étudiant
+        $student = User::factory()->create([
+            'name' => 'Etudiant Test',
+            'email' => 'etudiant@example.com',
+            'role' => 'student',
         ]);
 
-        // 2. Créer 10 utilisateurs aléatoires qui ont chacun 3 offres de stage
-        User::factory(10)
-            ->has(\App\Models\Offer::factory()->count(3), 'offers') // Relation magique
+        // Skills utilisateurs
+        $recruiter->skills()->attach($skills->random(5));
+        $student->skills()->attach($skills->random(4));
+
+        // Offres associées au recruteur de test
+        Offer::factory()
+            ->count(30) // nombre total d’offres
+            ->for($recruiter) // 🔥 association explicite
+            ->afterCreating(function (Offer $offer) use ($skills) {
+                $offer->skills()->attach(
+                    $skills->random(rand(2, 4))
+                );
+            })
             ->create();
     }
 }
