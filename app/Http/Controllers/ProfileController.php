@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\Skill;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -17,8 +18,10 @@ class ProfileController extends Controller
      */
     public function edit(Request $request,): View
     {
+        $allSkills = Skill::orderBy('name')->get();
         return view('profile.edit', [
             'user' => $request->user(),
+            'allSkills' => $allSkills,
         ]);
     }
 
@@ -50,6 +53,12 @@ class ProfileController extends Controller
         // ---------------------
 
         $request->user()->save();
+
+        // Synchroniser les skills du profil si fournis
+        if ($request->has('skills')) {
+            $skillIds = array_filter((array) $request->input('skills'));
+            $request->user()->skills()->sync($skillIds);
+        }
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }

@@ -47,17 +47,21 @@
             @endif
         </div>
 
+        <!-- Skills multiselect -->
+        <div>
+            <label class="block text-gray-700 text-sm font-bold mb-2">Compétences</label>
+            <select name="skills[]" multiple class="border rounded w-full py-2 px-3">
+                @foreach($allSkills as $skill)
+                    <option value="{{ $skill->id }}" @if($user->skills->contains('id', $skill->id)) selected @endif>{{ $skill->name }}</option>
+                @endforeach
+            </select>
+        </div>
+
         <div class="flex items-center gap-4">
             <x-primary-button>{{ __('Save') }}</x-primary-button>
 
             @if (session('status') === 'profile-updated')
-                <p
-                    x-data="{ show: true }"
-                    x-show="show"
-                    x-transition
-                    x-init="setTimeout(() => show = false, 2000)"
-                    class="text-sm text-gray-600"
-                >{{ __('Saved.') }}</p>
+                <p class="text-sm text-gray-600">{{ __('Saved.') }}</p>
             @endif
         </div>
     </form>
@@ -77,5 +81,5 @@
 
         </form>
     @endif
-    
+
 </section>
