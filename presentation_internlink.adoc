@@ -1,0 +1,416 @@
+= Présentation de l’application InternLink
+:date: 19 janvier 2026
+:toc:
+:toclevels: 2
+
+== Introduction
+
+InternLink est une application web développée avec le framework Laravel. Elle vise à faciliter la mise en relation entre étudiants à la recherche de stages et entreprises proposant des offres. L’application s’adresse principalement à trois types d’utilisateurs : les étudiants, les entreprises et les administrateurs. Elle propose un ensemble de fonctionnalités permettant la gestion des profils, des offres de stage, des candidatures et des compétences.
+
+== Fonctionnalités principales
+
+=== Gestion des utilisateurs
+- Trois rôles principaux : étudiant, entreprise, administrateur.
+- Inscription et authentification sécurisées.
+- Gestion du profil utilisateur : informations personnelles, ajout/modification de CV.
+- Attribution de rôles et gestion des permissions.
+
+.Exemple de modèle User (app/Models/User.php)
+[source,php]
+----
+class User extends Authenticatable
+{
+    use HasFactory, Notifiable;
+    protected $fillable = [
+        'name', 'email', 'password', 'role', 'cv_path',
+    ];
+    // Un utilisateur peut avoir plusieurs offres
+    public function offers() {
+        return $this->hasMany(Offer::class);
+    }
+    // Un utilisateur peut avoir plusieurs compétences
+    public function skills() {
+        return $this->belongsToMany(Skill::class);
+    }
+}
+----
+
+.Exemple de factory User (database/factories/UserFactory.php)
+[source,php]
+----
+public function definition(): array
+{
+    return [
+        'name' => fake()->name(),
+        'email' => fake()->unique()->safeEmail(),
+        'email_verified_at' => now(),
+        'password' => Hash::make('password'),
+        'role' => 'student', // ou 'company', 'admin'
+    ];
+}
+----
+
+.Exemple de seeder (database/seeders/DatabaseSeeder.php)
+[source,php]
+----
+\App\Models\User::factory()->create([
+    'name' => 'Etudiant Test',
+    'email' => 'etudiant@example.com',
+    'password' => 'password',
+    'role' => 'student',
+]);
+----
+
+=== Gestion des offres
+- Création, modification et suppression d’offres par les entreprises.
+- Consultation et recherche d’offres par les étudiants.
+- Association de compétences requises à chaque offre.
+
+.Exemple de modèle Offer (app/Models/Offer.php)
+[source,php]
+----
+class Offer extends Model
+{
+    use HasFactory;
+    protected $fillable = [
+        'title', 'company_name', 'description', 'user_id'
+    ];
+    // Une offre appartient à un utilisateur (entreprise)
+    public function user(): BelongsTo {
+        return $this->belongsTo(User::class);
+    }
+    // Une offre peut avoir plusieurs candidatures
+    public function applications() {
+        return $this->hasMany(Application::class);
+    }
+}
+----
+
+.Exemple de migration (database/migrations/2025_12_07_081306_create_offers_table.php)
+[source,php]
+----
+Schema::create('offers', function (Blueprint $table) {
+    $table->id();
+    $table->string('title');
+    $table->string('company_name');
+    $table->text('description');
+    $table->foreignIdFor(\App\Models\User::class)->constrained()->cascadeOnDelete();
+    $table->timestamps();
+});
+----
+
+.Exemple de factory Offer (database/factories/OfferFactory.php)
+[source,php]
+----
+public function definition(): array
+{
+    return [
+        'title' => fake()->jobTitle(),
+        'company_name' => fake()->company(),
+        'description' => fake()->paragraph(3),
+        'user_id' => \App\Models\User::factory(),
+    ];
+}
+----
+
+.Exemple de contrôleur (app/Http/Controllers/OfferController.php)
+[source,php]
+----
+public function store(Request $request)
+{
+    $validated = $request->validate([
+        'title' => 'required|max:255',
+        'company_name' => 'required|max:255',
+        'description' => 'required',
+    ]);
+    Offer::create([
+        'title' => $request->title,
+        'company_name' => $request->company_name,
+        'description' => $request->description,
+        'user_id' => Auth::id()
+    ]);
+    return redirect('/dashboard')->with('success', 'Offre créée avec succès !');
+}
+----
+
+.Exemple de vue Blade pour la création d'une offre (resources/views/offers/create.blade.php)
+[source,blade]
+----
+<form method="POST" action="{{ route('offers.store') }}">
+    @csrf
+    <input type="text" name="title" required>
+    <input type="text" name="company_name" required>
+    <textarea name="description" required></textarea>
+    <button type="submit">Créer l'offre</button>
+</form>
+----
+
+=== Gestion des candidatures
+- Soumission de candidatures par les étudiants sur les offres disponibles.
+- Suivi de l’état des candidatures (en attente, acceptée, refusée).
+- Historique des candidatures pour chaque utilisateur.
+- Validation ou refus des candidatures par les entreprises.
+
+.Exemple de modèle Application (app/Models/Application.php)
+[source,php]
+----
+class Application extends Model
+{
+    use HasFactory;
+    protected $fillable = ['user_id', 'offer_id'];
+    // Une candidature appartient à une offre
+    public function offer() {
+        return $this->belongsTo(Offer::class);
+    }
+    // Une candidature appartient à un étudiant (User)
+    public function user() {
+        return $this->belongsTo(User::class);
+    }
+}
+----
+
+.Exemple de migration (database/migrations/2025_12_07_081308_create_applications_table.php)
+[source,php]
+----
+Schema::create('applications', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('user_id')->constrained()->onDelete('cascade');
+    $table->foreignId('offer_id')->constrained()->onDelete('cascade');
+    $table->timestamps();
+});
+----
+
+.Exemple de contrôleur (app/Http/Controllers/ApplicationController.php)
+[source,php]
+----
+public function store(Offer $offer)
+{
+    if (!Gate::allows('apply-offer')) {
+        abort(403, "Seuls les étudiants peuvent postuler.");
+    }
+    $exists = Application::where('user_id', Auth::id())
+                         ->where('offer_id', $offer->id)
+                         ->exists();
+    if ($exists) {
+        return back()->with('error', 'Vous avez déjà postulé à cette offre !');
+    }
+    Application::create([
+        'user_id' => Auth::id(),
+        'offer_id' => $offer->id
+    ]);
+    return back()->with('success', 'Candidature envoyée !');
+}
+----
+
+.Exemple d'affichage des candidatures dans une vue Blade (resources/views/dashboard.blade.php)
+[source,blade]
+----
+<strong>Candidatures ({{ $offer->applications->count() }}) :</strong>
+@if($offer->applications->count() > 0)
+    <ul>
+        @foreach($offer->applications as $app)
+            <li>
+                {{ $app->user->name }} ({{ $app->user->email }})
+                @if($app->user->cv_path)
+                    <a href="{{ asset('storage/' . $app->user->cv_path) }}" target="_blank">Voir le CV</a>
+                @endif
+            </li>
+        @endforeach
+    </ul>
+@endif
+----
+
+=== Gestion des compétences
+- Ajout et gestion des compétences par les utilisateurs.
+- Association des compétences aux profils étudiants et aux offres.
+- Recherche d’offres par compétences.
+
+.Exemple de modèle Skill (app/Models/Skill.php)
+[source,php]
+----
+class Skill extends Model
+{
+    use HasFactory;
+    protected $fillable = ['name'];
+    // Une compétence peut appartenir à plusieurs utilisateurs
+    public function users() {
+        return $this->belongsToMany(User::class);
+    }
+    // Une compétence peut être associée à plusieurs offres
+    public function offers() {
+        return $this->belongsToMany(Offer::class);
+    }
+}
+----
+
+.Exemple de migration (database/migrations/2026_01_19_081541_create_skills_table.php)
+[source,php]
+----
+Schema::create('skills', function (Blueprint $table) {
+    $table->id();
+    $table->string('name');
+    $table->timestamps();
+});
+----
+
+.Exemple de factory Skill (database/factories/SkillFactory.php)
+[source,php]
+----
+public function definition(): array
+{
+    return [
+        'name' => fake()->word(),
+    ];
+}
+----
+
+.Exemple d'association dans le seeder (database/seeders/DatabaseSeeder.php)
+[source,php]
+----
+$skills = \App\Models\Skill::factory(10)->create();
+$user = \App\Models\User::first();
+$user->skills()->attach($skills->pluck('id')->random(3));
+----
+
+=== Autres fonctionnalités
+- Tableau de bord personnalisé selon le rôle de l’utilisateur.
+- Notifications (ex : nouvelle offre, changement d’état d’une candidature).
+- Filtres de recherche avancés pour les offres et les profils.
+
+== Organisation technique de l’application
+
+=== Structure des dossiers
+- *app/* : contient la logique métier (modèles, contrôleurs, providers).
+- *routes/* : définit les routes de l’application (web, API, console).
+- *resources/* : ressources front-end (vues Blade, CSS, JS).
+- *database/* : gestion des migrations, seeders et factories.
+- *public/* : fichiers accessibles publiquement (index.php, assets).
+- *config/* : fichiers de configuration de l’application.
+
+=== Modèles (Models)
+- `User` : représente les utilisateurs (étudiants, entreprises, admins).
+- `Offer` : représente les offres de stage.
+- `Application` : représente les candidatures des étudiants.
+- `Skill` : représente les compétences.
+- Relations :
+  * Un utilisateur peut avoir plusieurs compétences.
+  * Une offre peut exiger plusieurs compétences.
+  * Un utilisateur peut postuler à plusieurs offres.
+
+=== Contrôleurs (Controllers)
+- Gèrent la logique métier et les interactions entre modèles et vues.
+- Exemples :
+  * `UserController` : gestion des profils utilisateurs.
+  * `OfferController` : gestion des offres.
+  * `ApplicationController` : gestion des candidatures.
+  * `SkillController` : gestion des compétences.
+
+=== Vues (Views)
+- Utilisation de Blade pour le rendu des pages.
+- Organisation par modules :
+  * *resources/views/offers/* : pages liées aux offres.
+  * *resources/views/profile/* : pages de profil utilisateur.
+  * *resources/views/dashboard.blade.php* : tableau de bord.
+
+=== Autres aspects techniques
+- Migrations : création et évolution des tables de la base de données.
+- Seeders : insertion de données de test (ex : compétences).
+- Factories : génération de données fictives pour les tests.
+- Sécurité :
+  * Authentification Laravel.
+  * Validation des données côté serveur.
+  * Protection contre les accès non autorisés.
+
+=== Autorisations (Gates)
+Dans ce projet, la gestion des autorisations simples se fait via des Gates définies dans `App\\Providers\\AppServiceProvider`. Les Gates permettent d'exprimer des règles métiers (qui peut faire quoi) de façon centralisée et d'utiliser ces règles dans les contrôleurs, les middlewares ou les vues Blade.
+
+.Extrait des définitions de Gates (app/Providers/AppServiceProvider.php)
+[source,php]
+----
+Gate::define('manage-offer', function (User $user, Offer $offer) {
+    return $user->id === $offer->user_id;
+});
+
+Gate::define('create-offer', function (User $user) {
+    return $user->role === 'company';
+});
+
+Gate::define('apply-offer', function (User $user) {
+    return $user->role === 'student';
+});
+----
+
+Explications et bonnes pratiques :
+- `manage-offer` : autorise uniquement le propriétaire (la company ayant créé l'offre) à modifier/supprimer son offre.
+- `create-offer` : limite la création d'offres au rôle `company`.
+- `apply-offer` : limite la possibilité de postuler au rôle `student`.
+
+Utilisation dans les contrôleurs :
+- Vérification imperativement avant d'exécuter une action sensible (édition, suppression, candidature). Si la Gate refuse, on renvoie une erreur 403.
+
+.Exemples d'utilisation dans un contrôleur (app/Http/Controllers/OfferController.php)
+[source,php]
+----
+if (!Gate::allows('manage-offer', $offer)) {
+    abort(403);
+}
+----
+
+.Exemple pour la candidature (app/Http/Controllers/ApplicationController.php)
+[source,php]
+----
+if (!Gate::allows('apply-offer')) {
+    abort(403, "Seuls les étudiants peuvent postuler.");
+}
+----
+
+Utilisation dans Blade :
+- On peut afficher ou masquer des éléments selon une Gate.
+
+[source,blade]
+----
+<?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('create-offer')): ?>
+    <a href="<?php echo e(route('offers.create')); ?>">Créer une offre</a>
+<?php endif; ?>
+----
+
+Alternatives et évolutions :
+- Pour des règles plus complexes liées à un modèle, préférer les Policies (artisan make:policy) car elles organisent les règles par modèle.
+- Les Gates conviennent très bien pour des règles globales (rôles, accès génériques).
+
+=== Routes (organisation et exemples)
+Les routes principales sont définies dans `routes/web.php`. Voici les points clés et bonnes pratiques observés dans le projet :
+
+- Groupes `middleware(['auth'])` : les routes de création/modification/suppression et de candidature sont protégées par l'authentification.
+- Ordre des routes : les routes avec des chemins statiques comme `/offers/create` doivent être définies avant la route dynamique `/offers/\{offer\}` pour éviter que Laravel n'interprète `create` comme un paramètre `offer`.
+- Nommage : chaque route est nommée avec `->name(...)` pour faciliter la génération d'URLs via `route('...')` dans les vues et redirections.
+
+.Extraits et exemples (routes/web.php)
+[source,php]
+----
+// Routes protégées : création, modification, suppression, candidature
+Route::middleware(['auth'])->group(function () {
+    Route::get('/offers/create', [OfferController::class, 'create'])->name('offers.create');
+    Route::post('/offers', [OfferController::class, 'store'])->name('offers.store');
+
+    Route::get('/offers/{offer}/edit', [OfferController::class, 'edit'])->name('offers.edit');
+    Route::patch('/offers/{offer}', [OfferController::class, 'update'])->name('offers.update');
+    Route::delete('/offers/{offer}', [OfferController::class, 'destroy'])->name('offers.destroy');
+
+    Route::post('/offers/{offer}/apply', [ApplicationController::class, 'store'])->name('offers.apply');
+});
+
+// Routes publiques
+Route::get('/offers', [OfferController::class, 'index'])->name('offers.index');
+Route::get('/offers/{offer}', [OfferController::class, 'show'])->name('offers.show');
+----
+
+Explications complémentaires :
+- Utiliser `route('offers.show', $offer)` plutôt que des URL codées en dur (hardcoded) pour plus de flexibilité.
+- Dans les redirections du contrôleur, utiliser `return redirect()->route('dashboard')` ou `->route('offers.show', $offer)` pour la lisibilité et la robustesse.
+- Valider l'accès côté serveur (via Gates/Policies) même si l'interface hide/affiche des boutons en Blade : la sécurité doit être côté serveur.
+
+.Bonnes pratiques pour les routes et la sécurité
+- Toujours protéger les routes mutantes (POST/PATCH/DELETE) avec le middleware `auth` et CSRF (Laravel le gère automatiquement pour les formulaires Blade via `@csrf`).
+- Pour des APIs publiques ajouter `throttle` si nécessaire et prévoir des réponses JSON standardisées.
+- Documenter les routes importantes (nom, méthode, middleware) pour faciliter le travail en équipe.
