@@ -2,10 +2,12 @@
 
 namespace Database\Factories;
 
+use App\Models\Offer;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Offer>
+ * @extends Factory<Offer>
  */
 class OfferFactory extends Factory
 {
@@ -20,7 +22,7 @@ class OfferFactory extends Factory
             'title' => fake()->jobTitle(), // Génère un titre de métier
             'company_name' => fake()->company(), // Génère un nom d'entreprise
             'description' => fake()->paragraph(3), // Génère un texte de 3 phrases
-            'user_id' => \App\Models\User::factory(), // Crée un user associé automatiquement
+            'user_id' => User::factory(), // Crée un user associé automatiquement
         ];
     }
 }
